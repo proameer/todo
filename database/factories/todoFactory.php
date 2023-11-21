@@ -21,6 +21,7 @@ class todoFactory extends Factory
             'note' => fake()->text(50),
             'is_done' => $isDone,
             'date_done' => $isDone? fake()->dateTimeBetween('2023-10-1'): null,
+            'todo_type_id' => rand(1, 4),
         ];
     }
 }

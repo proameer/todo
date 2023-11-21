@@ -9,14 +9,19 @@ class TodoController extends Controller
 {
     public function index(Request $request)
     {
-        // $todo = Todo::create($request->all());
-        return Todo::all();
+         $todo = Todo::with('TodoType')->get();
+         return $todo;
     }
     public function store(Request $request)
     {
+        $request->validate([
+            'note' => 'required|string',
+        ]);
+    
         $todo = Todo::create([
-            'note'=>$request->note,
-            ]);
+            'note' => $request->note,
+        ]);
+    
         return response()->json($todo);
     }
 
@@ -29,7 +34,11 @@ class TodoController extends Controller
     public function update(Request $request, $id)
     {
         $todo = Todo::findOrFail($id);
-        $todo->update($request->all());
+        $todo->update([
+            'note'=>$request->note,
+            'is_done'=>true,
+            'date_done'=>now(),
+        ]);
         return response()->json($todo);
     }
 
@@ -50,8 +59,9 @@ class TodoController extends Controller
         $request->filled('end_date') ? $filters []= ['date_done', '<=', $request->end_date] : 0;
         $request->filled('start_date1') ? $filters []= ['created_at', '>=', $request->start_date1] : 0;
         $request->filled('end_date1') ? $filters []= ['created_at', '<=', $request->end_date1] : 0;
+        $request->filled('todo_type') ? $filters []= ['todo_type_id', 'like', $request->todo_type]: 0;
 
-        $todos = Todo::orderBy('id', 'desc')
+        $todos = Todo::with('todoType')->orderBy('id', 'desc')
         ->where($filters)
         ->get();
 
