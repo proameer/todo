@@ -22,6 +22,7 @@ class todoFactory extends Factory
             'is_done' => $isDone,
             'date_done' => $isDone? fake()->dateTimeBetween('2023-10-1'): null,
             'todo_type_id' => rand(1, 4),
+            'user_id' => rand(1, 10),
         ];
     }
 }

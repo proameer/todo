@@ -21,6 +21,7 @@ class TodoResource extends JsonResource
             'date_done' => $this->date_done,
             // 'type_name' => $this->todoType->name,
             'todo_type' => new TodoTypeResource($this->todoType),
+            'users' => new UsersResource($this->user),
         ];
     }
 }

@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Http\TodoStoreRequest;
 use App\Models\Todo;
+use App\Http\Resources\TodoResource;
 
 class TodoController extends Controller
 {
@@ -12,15 +14,13 @@ class TodoController extends Controller
          $todo = Todo::with('TodoType')->get();
          return $todo;
     }
-    public function store(Request $request)
+    public function store(TodoStoreRequest $request)
     {
-        $request->validate([
-            'note' => 'required|string',
-        ]);
+        // $request->validate([
+        //     'note' => 'required|string',
+        // ]);
     
-        $todo = Todo::create([
-            'note' => $request->note,
-        ]);
+        $todo = Todo::create($request->only('note', 'todo_type_id', 'user_id'));
     
         return response()->json($todo);
     }
@@ -31,11 +31,13 @@ class TodoController extends Controller
         return response()->json($todo);
     }
 
-    public function update(Request $request, $id)
+    public function update(TodoUpdateRequest $request, $id)
     {
         $todo = Todo::findOrFail($id);
         $todo->update([
             'note'=>$request->note,
+            'user_id'=>$request->user_id,
+            'todo_type_id'=>$request->todo_type_id,
             'is_done'=>true,
             'date_done'=>now(),
         ]);
@@ -60,11 +62,28 @@ class TodoController extends Controller
         $request->filled('start_date1') ? $filters []= ['created_at', '>=', $request->start_date1] : 0;
         $request->filled('end_date1') ? $filters []= ['created_at', '<=', $request->end_date1] : 0;
         $request->filled('todo_type') ? $filters []= ['todo_type_id', 'like', $request->todo_type]: 0;
+        $request->filled('user_id') ? $filters[] = ['user_id', '=', $request->user_id] : 0;
 
-        $todos = Todo::with('todoType')->orderBy('id', 'desc')
+
+
+        $todos = Todo::with(['todoType','user'])->orderBy('id', 'desc')
+        ->when($request->todo_type_id != [], function($q) use( $request) {
+            return $q->whereIn('todo_type_id', $request->todo_type_id);
+        })
         ->where($filters)
         ->get();
 
-        return $todos;
+        // return $todos;
+        return TodoResource::collection($todos);
+    }
+
+    public function done(DoneRequest $request, $id)
+    {
+        $todo = Todo::findOrFail($id);
+        $todo->update([
+            'is_done'=>true,
+            'date_done'=>now(),
+        ]);
+        return response()->json($todo);
     }
 }
