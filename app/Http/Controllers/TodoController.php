@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\TodoStoreRequest;
+use Illuminate\Http\TodoUpdateRequest;
+use Illuminate\Http\TodoDoneRequest;
 use App\Models\Todo;
 use App\Http\Resources\TodoResource;
 
@@ -16,10 +18,6 @@ class TodoController extends Controller
     }
     public function store(TodoStoreRequest $request)
     {
-        // $request->validate([
-        //     'note' => 'required|string',
-        // ]);
-    
         $todo = Todo::create($request->only('note', 'todo_type_id', 'user_id'));
     
         return response()->json($todo);
@@ -64,8 +62,6 @@ class TodoController extends Controller
         $request->filled('todo_type') ? $filters []= ['todo_type_id', 'like', $request->todo_type]: 0;
         $request->filled('user_id') ? $filters[] = ['user_id', '=', $request->user_id] : 0;
 
-
-
         $todos = Todo::with(['todoType','user'])->orderBy('id', 'desc')
         ->when($request->todo_type_id != [], function($q) use( $request) {
             return $q->whereIn('todo_type_id', $request->todo_type_id);
@@ -77,7 +73,7 @@ class TodoController extends Controller
         return TodoResource::collection($todos);
     }
 
-    public function done(DoneRequest $request, $id)
+    public function done(TodoDoneRequest $request, $id)
     {
         $todo = Todo::findOrFail($id);
         $todo->update([
