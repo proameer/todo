@@ -82,4 +82,39 @@ class TodoController extends Controller
         ]);
         return response()->json($todo);
     }
+
+    function report(Request $request)
+    {
+        $filters = [];
+        $request->filled('is_done') ? $filters []= ['is_done', '=', $request->is_done]: 0;
+
+        $doneReport = Todo::selectRaw('GROUP_CONCAT(DISTINCT is_done) as is_done, count(*) as total')
+        ->where($filters)
+        ->groupBy('is_done')
+        ->orderBy('total','desc')
+        ->get();
+
+        $typeReport = Todo::selectRaw('GROUP_CONCAT(DISTINCT todo_types.name) as name, count(*) as total, sum(is_done=1) as done, sum(is_done=0) as not_done')
+        ->where($filters)
+        ->leftJoin('todo_types','todo_type_id','=','todo_types.id')
+        ->groupBy('todo_type_id')
+        ->orderBy('total','desc')
+        ->get();
+
+        $everyUserReport = Todo::selectRaw('GROUP_CONCAT(DISTINCT users.name) as name, count(*) as total, sum(is_done=1) as done, sum(is_done=0) as not_done')
+        ->where($filters)
+        ->leftJoin('users','user_id','=','users.id')
+        ->groupBy('user_id')
+        ->orderBy('total','desc')
+        ->get();
+
+        $sumAllTodos = $typeReport->sum('total');
+
+        return [
+            'sumAllTodos' => $sumAllTodos,
+            'doneReport' => $doneReport,
+            'typeReport' => $typeReport,
+            'everyUserReport' => $everyUserReport,
+        ];
+    }
 }
