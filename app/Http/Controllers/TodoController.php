@@ -78,7 +78,7 @@ class TodoController extends Controller
         $todo = Todo::findOrFail($id);
         $todo->update([
             'is_done'=>true,
-            'date_done'=>now(),
+            'date_done' => $request->date_done ?? now(),
         ]);
         return response()->json($todo);
     }
@@ -116,5 +116,14 @@ class TodoController extends Controller
             'typeReport' => $typeReport,
             'everyUserReport' => $everyUserReport,
         ];
+    }
+
+    function myTodo()
+    {
+        $todo = Todo::where('user_id', Auth::id())
+        ->orderBy('is_done')
+        ->get();
+        
+        return TodoResource::collection($todo);
     }
 }

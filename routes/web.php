@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TodoController;
+use App\Http\Controllers\UserController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -16,12 +17,16 @@ use App\Http\Controllers\TodoController;
 Route::get('/', function () {
     return view('welcome');
 });
+Route::post('login', [UserController::class, 'login'])->name('login');
 
-Route::get('todo', [TodoController::class, 'index']);
-Route::post('todo/store', [TodoController::class, 'store']);
-Route::post('todo/update/{todo_id}', [TodoController::class, 'update']);
-Route::get('todo/show/{todo_id}', [TodoController::class, 'show']);
-Route::get('todo/delete/{todo_id}', [TodoController::class, 'delete']);
-Route::post('todo/done/{todo_id}', [TodoController::class, 'done']);
-Route::get('todo/search', [TodoController::class, 'search']);
-Route::get('todo/report', [TodoController::class, 'report']);
+Route::group(['prefix' => 'todo', 'controller' => TodoController::class, 'middleware' => 'auth:sanctum'], function() {
+    Route::get('/', 'index');
+    Route::post('/store', 'store');
+    Route::post('/update/{todo_id}', 'update');
+    Route::get('/show/{todo_id}', 'show');
+    Route::get('/delete/{todo_id}', 'delete');
+    Route::post('/done/{todo_id}', 'done');
+    Route::get('/search', 'search');
+    Route::get('/report', 'report');
+    Route::get('/my', 'myTodo');
+});
